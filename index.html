@@ -1,0 +1,979 @@
+<!doctype html><html><head><meta charset=utf-8><meta name=description content="โมเดล 3D ห้องเช่ารูปตัว T สูง 2 ชั้น ตามผัง Draft v7"><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui}img{max-width:100%}[hidden]{display:none!important}</style></head><body><title>Room for Rent 3D</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bai+Jamjuree:wght@500;600&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Thai:wght@400;500;600&display=swap">
+<style>
+/* Layout: full-bleed model table; floating panels set like a drawing's title block, pinned to the corners */
+:root{
+  --bg:#e4e2dc;
+  --scene:#dedcd5;
+  --panel:#fbfaf7;
+  --panel-glass:rgba(251,250,247,.92);
+  --ink:#22262a;
+  --muted:#5c636a;
+  --line:#d3cdc1;
+  --accent:#b9531a;
+  --accent-soft:#f6e3d5;
+  --fam:#2d7a47;
+  --shadow:rgba(30,26,20,.10);
+  --sw-room:#efd9c6;
+  --sw-fam:#cfe9d6;
+  --sw-walk:#efe3b5;
+  --sw-tenant:#cddcea;
+  --sw-owner:#a8c98f;
+  --sw-drive:#ddd2bd;
+  --font-display:"Bai Jamjuree","IBM Plex Sans Thai",system-ui,sans-serif;
+  --font-body:"IBM Plex Sans Thai","Noto Sans Thai","Thonburi",system-ui,sans-serif;
+  --font-data:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#15181b; --scene:#1b1f23; --panel:#20252a; --panel-glass:rgba(32,37,42,.92);
+    --ink:#ebe8e2; --muted:#a3aab1; --line:#373e45; --accent:#ec8a4f; --accent-soft:#3b2a1f;
+    --fam:#7fcf98; --shadow:rgba(0,0,0,.35); color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#15181b; --scene:#1b1f23; --panel:#20252a; --panel-glass:rgba(32,37,42,.92);
+  --ink:#ebe8e2; --muted:#a3aab1; --line:#373e45; --accent:#ec8a4f; --accent-soft:#3b2a1f;
+  --fam:#7fcf98; --shadow:rgba(0,0,0,.35); color-scheme:dark;
+}
+html{height:100%;box-sizing:border-box}
+*,*::before,*::after{box-sizing:inherit}
+body{height:100%;margin:0;overflow:hidden;background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:14px;line-height:1.5}
+#app{position:relative;height:100%;overflow:hidden}
+#stage{position:absolute;inset:0;z-index:0}
+#stage canvas{display:block;width:100%;height:100%;touch-action:none;outline:none}
+.labels{position:absolute;inset:0;pointer-events:none}
+#loading{position:absolute;inset:0;display:grid;place-items:center;color:var(--muted);font-size:13px;pointer-events:none}
+
+.hud{position:absolute;inset:0;z-index:1;pointer-events:none;display:grid;gap:12px;
+  grid-template-columns:minmax(0,340px) minmax(0,1fr) minmax(0,292px);
+  grid-template-rows:auto minmax(0,1fr) auto;
+  padding-block:16px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));
+  padding-right:max(16px,env(safe-area-inset-right,0px))}
+.hud>*{pointer-events:auto}
+.panel{background:var(--panel-glass);border:1px solid var(--line);border-radius:8px;
+  box-shadow:0 1px 2px var(--shadow),0 10px 28px var(--shadow);
+  -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px)}
+
+/* title block */
+.plate{grid-column:1;grid-row:1 / 3;align-self:start;max-height:100%;overflow:auto;min-width:0}
+.plate-head{padding:14px 16px 12px;display:grid;gap:4px}
+.eyebrow{margin:0;font-family:var(--font-data);font-size:11px;letter-spacing:.12em;color:var(--accent);text-transform:uppercase}
+h1{margin:0;font-family:var(--font-display);font-weight:600;font-size:21px;line-height:1.25;text-wrap:balance}
+.sub{margin:0;color:var(--muted);font-size:13px}
+.plate>details>summary{list-style:none;cursor:pointer;padding:8px 16px;border-top:1px solid var(--line);font-size:12px;color:var(--muted);display:flex;justify-content:space-between;align-items:center}
+.plate>details>summary::-webkit-details-marker{display:none}
+.plate>details>summary::after{content:"+";font-family:var(--font-data);font-size:14px}
+.plate>details[open]>summary::after{content:"–"}
+.tb{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid var(--line);margin:0}
+.tb>div{padding:9px 16px;border-bottom:1px solid var(--line);display:grid;gap:1px;min-width:0}
+.tb>div:nth-child(odd){border-right:1px solid var(--line)}
+.tb dt{font-size:11px;color:var(--muted);letter-spacing:.02em}
+.tb dd{margin:0;font-family:var(--font-data);font-size:15px;font-weight:500;font-variant-numeric:tabular-nums}
+.tb small{font-family:var(--font-body);font-size:11.5px;color:var(--muted);font-weight:400}
+.legend{list-style:none;margin:0;padding:12px 16px;display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;font-size:12.5px}
+.legend li{display:flex;align-items:center;gap:8px;min-width:0}
+.sw{width:14px;height:14px;border-radius:3px;border:1px solid var(--line);flex:none}
+.assume{border-top:1px solid var(--line)}
+.assume summary{cursor:pointer;padding:8px 16px;font-size:12px;color:var(--muted)}
+.assume ul{margin:0;padding:0 16px 12px 32px;display:grid;gap:4px;font-size:12.5px}
+.foot{margin:0;padding:9px 16px 12px;border-top:1px solid var(--line);font-size:11.5px;color:var(--muted)}
+
+/* controls */
+.controls{grid-column:3;grid-row:1;align-self:start;padding:12px;display:grid;gap:12px;min-width:0}
+.controls h2,.info h2{margin:0 0 6px;font-family:var(--font-display);font-weight:600;font-size:12px;letter-spacing:.06em;color:var(--muted)}
+.seg,.togs{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+button{font:inherit;font-size:13px;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:7px 10px;cursor:pointer;text-align:left;line-height:1.3}
+button:hover{border-color:var(--muted)}
+button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button:disabled{opacity:.45;cursor:not-allowed}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--panel);border-color:var(--ink)}
+.tog{display:flex;align-items:center;gap:8px}
+.tog::before{content:"";width:12px;height:12px;border-radius:3px;border:1.5px solid var(--muted);flex:none}
+.tog[aria-pressed="true"]::before{background:var(--accent);border-color:var(--accent);box-shadow:inset 0 0 0 2px var(--panel)}
+.msg{margin:6px 0 0;font-size:12px;color:var(--muted);min-height:1em}
+
+/* info card */
+.info{grid-column:3;grid-row:3;align-self:end;padding:12px 14px 14px;min-width:0}
+.info-head{display:flex;justify-content:space-between;align-items:start;gap:8px}
+.info-head h2{margin:0;font-size:17px;letter-spacing:0;color:var(--ink)}
+.info-head button{padding:2px 9px;font-size:16px;line-height:1.2}
+.info dl{margin:8px 0 0;display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:13px}
+.info dt{color:var(--muted)}
+.info dd{margin:0;min-width:0}
+.info .note{margin:10px 0 0;padding:6px 8px;border-radius:5px;background:var(--accent-soft);font-size:12px}
+
+.hint{grid-column:1 / 3;grid-row:3;align-self:end;justify-self:start;margin:0;padding:6px 10px;font-size:12px;color:var(--muted)}
+
+/* 3D labels */
+.lbl{font-family:var(--font-body);font-size:11.5px;line-height:1.2;color:var(--ink);white-space:nowrap;pointer-events:none;user-select:none}
+.lbl.room{font-family:var(--font-data);font-weight:500;font-size:12px;color:var(--accent);background:var(--panel);border:1px solid var(--accent);border-radius:999px;padding:1px 7px}
+.lbl.room.fam{color:var(--fam);border-color:var(--fam)}
+.lbl.zone{padding:2px 7px;border-radius:4px;background:var(--panel-glass);border:1px solid var(--line)}
+.lbl.note{font-size:10.5px;color:var(--muted);background:var(--panel-glass);border-radius:4px;padding:1px 6px}
+
+@media (max-width:760px){
+  .hud{grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto auto;gap:8px;padding-block:10px}
+  .plate{grid-column:1;grid-row:1;max-height:48vh}
+  .plate-head{padding:10px 12px 8px}
+  h1{font-size:17px}
+  .sub{font-size:12px}
+  .controls{grid-column:1;grid-row:4;padding:10px;gap:8px}
+  .seg,.togs{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .seg button,.togs button{font-size:12px;padding:6px 7px;text-align:center}
+  .tog::before{display:none}
+  .tog[aria-pressed="true"]{border-color:var(--accent);color:var(--accent)}
+  #export .seg{grid-template-columns:1fr 1fr}
+  .info{grid-column:1;grid-row:3}
+  .hint{display:none}
+  .lbl.room{font-size:10.5px;padding:0 5px}
+  .lbl.zone{font-size:10px}
+  .lbl.note{display:none}
+}
+@media (prefers-reduced-motion:reduce){*{scroll-behavior:auto}}
+</style>
+
+<div id="app">
+  <div id="stage" aria-label="โมเดล 3D ห้องเช่าและบ้านเดิม ลากเพื่อหมุนมุมมอง" role="img">
+    <div id="loading">กำลังโหลดโมเดล 3D…</div>
+  </div>
+
+  <div class="hud">
+    <section class="plate panel" aria-labelledby="title">
+      <div class="plate-head">
+        <p class="eyebrow">Room for Rent · Draft v7</p>
+        <h1 id="title">ห้องเช่ารูปตัว T สูง 2 ชั้น</h1>
+        <p class="sub">โมเดลโครงสร้าง ยังไม่มีการตกแต่งภายใน</p>
+      </div>
+      <details id="more" open>
+        <summary>ข้อมูลโครงการ</summary>
+        <dl class="tb">
+          <div><dt>ห้องเช่า</dt><dd>18 ห้อง <small>ล่าง 9 · บน 9</small></dd></div>
+          <div><dt>ขนาดห้อง</dt><dd>4.0 × 7.5 m <small>30 m²</small></dd></div>
+          <div><dt>ที่จอดรถยนต์</dt><dd>8 คัน <small>ผู้เช่า 6 · บ้าน 2</small></dd></div>
+          <div><dt>มอเตอร์ไซค์</dt><dd>~10 คัน</dd></div>
+          <div><dt>ที่ดิน</dt><dd>39.5 × 29.84 m</dd></div>
+          <div><dt>พื้นที่ก่อสร้าง</dt><dd>≈ 668 m²</dd></div>
+        </dl>
+        <ul class="legend" aria-label="สีในโมเดล">
+          <li><span class="sw" style="background:var(--sw-room)"></span>พื้นห้องเช่า</li>
+          <li><span class="sw" style="background:var(--sw-fam)"></span>105–107 ครอบครัว</li>
+          <li><span class="sw" style="background:var(--sw-walk)"></span>ทางเดิน 1.5 m</li>
+          <li><span class="sw" style="background:var(--sw-tenant)"></span>ที่จอดมอเตอร์ไซค์</li>
+          <li><span class="sw" style="background:var(--sw-owner)"></span>ลานบ้าน</li>
+          <li><span class="sw" style="background:var(--sw-drive)"></span>ทางรถ / ช่องจอด</li>
+        </ul>
+        <details class="assume">
+          <summary>ค่าที่สมมติไว้ เพราะผังยังไม่ระบุ</summary>
+          <ul>
+            <li>ความสูงชั้นละ 3.0 m สันหลังคาสูงราว 7.4 m</li>
+            <li>หลังคาเมทัลชีททรงจั่ว ลาด 15° ยื่นคลุมทางเดินชั้น 2</li>
+            <li>หน้าต่างบานเลื่อนข้างประตู และช่องระบายอากาศในห้องน้ำ ไม่มีหน้าต่างหลังห้อง</li>
+            <li>บันไดตัว U ขนาด 2.5 × 4 m ตามไฟล์ Excel</li>
+            <li>รั้วรอบที่ดินและกำแพงกั้นลานหน้าประตูสูง 2 m ส่วนกำแพงฝั่งซ้ายสูง 2 ชั้นตามผัง</li>
+            <li>ผนังขาวครีม หลังคาเทา ประตูสีไม้</li>
+            <li>บ้านเดิมเป็นโมเดลอย่างง่าย ใช้บอกตำแหน่ง</li>
+          </ul>
+        </details>
+      </details>
+      <p class="foot">อิงผัง Draft v7 วันที่ 31 Oct 2026 · ใช้ดูแนวคิด ไม่ใช่แบบก่อสร้าง</p>
+    </section>
+
+    <section class="controls panel" aria-label="ตัวควบคุมโมเดล">
+      <div>
+        <h2>มุมมอง</h2>
+        <div class="seg" id="views">
+          <button type="button" id="v-oblique" data-view="oblique" aria-pressed="true">มุมเฉียง</button>
+          <button type="button" id="v-top" data-view="top" aria-pressed="false">มุมบน</button>
+          <button type="button" id="v-gate" data-view="gate" aria-pressed="false">จากทางเข้า</button>
+          <button type="button" id="v-walk" data-view="walk" aria-pressed="false">ทางเดินชั้น 2</button>
+        </div>
+      </div>
+      <div>
+        <h2>แสดง</h2>
+        <div class="togs">
+          <button type="button" class="tog" id="t-roof" data-key="roof" aria-pressed="true">หลังคา</button>
+          <button type="button" class="tog" id="t-upper" data-key="upper" aria-pressed="true">ชั้น 2</button>
+          <button type="button" class="tog" id="t-house" data-key="house" aria-pressed="true">บ้านเดิม</button>
+          <button type="button" class="tog" id="t-labels" data-key="labels" aria-pressed="true">ป้ายชื่อ</button>
+        </div>
+      </div>
+      <div id="export" hidden>
+        <h2>บันทึก</h2>
+        <div class="seg">
+          <button type="button" id="savePng">ภาพ PNG</button>
+          <button type="button" id="saveGlb">ไฟล์ 3D (.glb)</button>
+        </div>
+        <p class="msg" id="saveMsg" aria-live="polite"></p>
+      </div>
+    </section>
+
+    <aside class="info panel" id="info" hidden aria-live="polite">
+      <div class="info-head">
+        <h2 id="infoTitle"></h2>
+        <button type="button" id="infoClose" aria-label="ปิดข้อมูล">×</button>
+      </div>
+      <dl id="infoRows"></dl>
+      <p class="note" id="infoNote" hidden></p>
+    </aside>
+
+    <p class="hint panel">ลากเพื่อหมุน · คลิกขวาหรือสองนิ้วเพื่อเลื่อน · ล้อเมาส์เพื่อซูม · คลิกห้องเพื่อดูข้อมูล</p>
+  </div>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/",
+    "fflate": "https://cdn.jsdelivr.net/npm/fflate@0.8.2/esm/browser.js"
+  }
+}
+</script>
+<script>
+  setTimeout(function () {
+    if (!window.__modelReady) {
+      var l = document.getElementById('loading');
+      if (l) l.textContent = 'โหลดไลบรารี 3D ไม่สำเร็จ ลองรีเฟรชหน้าอีกครั้ง';
+    }
+  }, 15000);
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+
+const $ = (s) => document.querySelector(s);
+const readTok = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+// ---------- dimensions (metres, plan coordinates: x = depth 0–39.5, z = width 0–29.84 from the top edge) ----------
+const LOT_W = 39.5, LOT_D = 29.84;
+const T = 0.15;              // wall thickness
+const FH = 3.0;              // floor-to-floor height (assumed)
+const SLAB = 0.15;
+const F1 = FH + SLAB;        // upper finished floor level
+const RW = 4.0, RD = 7.5;    // room width × depth
+const STEM_END = 18.0;       // stem rooms run z 10–18 (108/109 and 208/209)
+const GATE_Z = 24.7;         // remote sliding gate line
+const TAN = Math.tan(THREE.MathUtils.degToRad(15));
+
+// ---------- textures & materials ----------
+function canvasTex(w, h, draw, rep) {
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  draw(c.getContext('2d'), w, h);
+  const t = new THREE.CanvasTexture(c);
+  t.wrapS = t.wrapT = THREE.RepeatWrapping; t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4;
+  if (rep) t.repeat.set(rep[0], rep[1]);
+  return t;
+}
+const tileTex = (base, grout, size) => canvasTex(64, 64, (g, w, h) => {
+  g.fillStyle = base; g.fillRect(0, 0, w, h); g.fillStyle = grout; g.fillRect(0, 0, w, 2); g.fillRect(0, 0, 2, h);
+}, [1 / size, 1 / size]);
+const corrTex = canvasTex(64, 4, (g, w, h) => {
+  const gr = g.createLinearGradient(0, 0, w, 0);
+  gr.addColorStop(0, '#5e7484'); gr.addColorStop(0.5, '#a0b2be'); gr.addColorStop(1, '#5e7484');
+  g.fillStyle = gr; g.fillRect(0, 0, w, h);
+}, [5, 1]);
+const hatchTex = canvasTex(64, 64, (g, w, h) => {
+  g.fillStyle = '#ddd2bd'; g.fillRect(0, 0, w, h);
+  g.strokeStyle = '#e2b84a'; g.lineWidth = 9;
+  for (let i = -w; i < w * 2; i += 32) { g.beginPath(); g.moveTo(i, 0); g.lineTo(i + h, h); g.stroke(); }
+}, [1, 1]);
+
+const mat = (color, o = {}) => new THREE.MeshStandardMaterial({ color, roughness: 0.88, metalness: 0, ...o });
+const M = {
+  wall: mat(0xf3eee5), gable: mat(0xf3eee5, { side: THREE.DoubleSide }),
+  slab: mat(0xd6d0c4), band: mat(0xd2cbbd), column: mat(0xe8e2d6), ceiling: mat(0xece7dd),
+  roomFloor: mat(0xffffff, { map: tileTex('#efd9c6', '#d8bea6', 0.6) }),
+  famFloor: mat(0xffffff, { map: tileTex('#d3ead8', '#aecdb5', 0.6) }),
+  roomFloorSel: mat(0xffffff, { map: tileTex('#f3a874', '#d68650', 0.6) }),
+  wcFloor: mat(0xffffff, { map: tileTex('#cfe2ea', '#a8c3ce', 0.3) }),
+  walk: mat(0xffffff, { map: tileTex('#efe3b5', '#d6c68c', 0.5) }),
+  door: mat(0x8b5a35, { roughness: 0.6 }),
+  frame: mat(0x3a3f45, { roughness: 0.5, metalness: 0.3 }),
+  glass: mat(0x9ec4d8, { roughness: 0.1, metalness: 0.1, transparent: true, opacity: 0.5 }),
+  frosted: mat(0xe2ecf1, { roughness: 0.4, transparent: true, opacity: 0.85 }),
+  parapet: mat(0xf3eee5), rail: mat(0x3f454b, { roughness: 0.5, metalness: 0.4 }),
+  stair: mat(0xd9d4ca),
+  roof: mat(0xffffff, { map: corrTex, roughness: 0.45, metalness: 0.35, side: THREE.DoubleSide }),
+  roofCap: mat(0x55636d, { roughness: 0.5, metalness: 0.4 }),
+  fence: mat(0xd6cfc1), fenceCap: mat(0xbdb5a6), oldWall: mat(0xbab3a5),
+  gate: mat(0x34393e, { roughness: 0.45, metalness: 0.5 }),
+  famGate: mat(0x2f6e45, { roughness: 0.45, metalness: 0.4 }),
+  outside: mat(0xcbc6b8), lotBase: mat(0xd8cfb9), lane: mat(0x8f8d87), forecourt: mat(0xb1aba0),
+  tenant: mat(0xffffff, { map: tileTex('#cddcea', '#b3c5d7', 1.0) }),
+  owner: mat(0xa8c98f), grass: mat(0xb8cfa0),
+  drive: mat(0xffffff, { map: tileTex('#ddd2bd', '#d2c6af', 2.5) }),
+  noPark: mat(0xffffff, { map: hatchTex }),
+  bayLine: mat(0xf7f5ef), bayOwner: mat(0x3f8a55),
+  line55: mat(0x8a5cc0),
+  houseWall: mat(0xe7d9bf), houseTrim: mat(0xfaf6ee), houseBase: mat(0xa69d8d),
+  houseRoof: mat(0xa4573c, { roughness: 0.7, flatShading: true }),
+  houseGlass: mat(0x3f5361, { roughness: 0.2, metalness: 0.3 }),
+  trunk: mat(0x7a5a3c), leaf: mat(0x6f9a58, { flatShading: true }),
+  carRed: mat(0x9c2f2f, { roughness: 0.4, metalness: 0.3 }), carBlue: mat(0x3d5a80, { roughness: 0.4, metalness: 0.3 }),
+  carWhite: mat(0xe6e6e1, { roughness: 0.4, metalness: 0.2 }), carGrey: mat(0x5b6066, { roughness: 0.4, metalness: 0.3 }),
+  carSilver: mat(0xaeb3b8, { roughness: 0.35, metalness: 0.4 }), carGlass: mat(0x2c3640, { roughness: 0.2 }),
+  tyre: mat(0x222222), bike: mat(0x2f4f7a, { roughness: 0.5 }), bike2: mat(0x8a2e2e, { roughness: 0.5 }),
+  person: mat(0x5a6b7d), skin: mat(0xc99a74),
+};
+M.glass.userData.noShadow = true;
+M.frosted.userData.noShadow = true;
+
+// ---------- geometry kit: collects boxes per material and merges them into one mesh each ----------
+function planarUV(g) {
+  const p = g.attributes.position, uv = g.attributes.uv;
+  for (let i = 0; i < p.count; i++) uv.setXY(i, p.getX(i), p.getZ(i));
+  uv.needsUpdate = true;
+}
+class Kit {
+  constructor(group) { this.group = group; this.b = new Map(); this.meshes = new Map(); }
+  add(geo, m) { if (!this.b.has(m)) this.b.set(m, []); this.b.get(m).push(geo); return geo; }
+  box(x0, x1, y0, y1, z0, z1, m, uv) {
+    const sx = Math.abs(x1 - x0), sy = Math.abs(y1 - y0), sz = Math.abs(z1 - z0);
+    if (sx < 1e-4 || sy < 1e-4 || sz < 1e-4) return null;
+    const g = new THREE.BoxGeometry(sx, sy, sz);
+    g.translate((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2);
+    if (uv) planarUV(g);
+    return this.add(g, m);
+  }
+  done() {
+    for (const [m, list] of this.b) {
+      const geo = list.length === 1 ? list[0] : mergeGeometries(list, false);
+      const mesh = new THREE.Mesh(geo, m);
+      mesh.castShadow = !m.userData.noShadow; mesh.receiveShadow = true;
+      this.group.add(mesh); this.meshes.set(m, mesh);
+    }
+    this.b.clear();
+    return this;
+  }
+}
+const ONE = new THREE.Vector3(1, 1, 1);
+function bar(k, A, B, s, m) {
+  const dir = B.clone().sub(A); const len = dir.length();
+  const g = new THREE.BoxGeometry(s, s, len);
+  const q = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 0, 1), dir.normalize());
+  g.applyMatrix4(new THREE.Matrix4().compose(A.clone().add(B).multiplyScalar(0.5), q, ONE));
+  k.add(g, m);
+}
+// railing between two floor points [x, floorY, z]: top bar 0.95 m above the floor line plus balusters
+function rail(k, a, b, h = 0.95) {
+  const A = new THREE.Vector3(...a), B = new THREE.Vector3(...b);
+  bar(k, A.clone().setY(A.y + h), B.clone().setY(B.y + h), 0.05, M.rail);
+  const n = Math.max(1, Math.round(Math.hypot(B.x - A.x, B.z - A.z) / 0.3));
+  for (let i = 0; i <= n; i++) {
+    const t = i / n, x = A.x + (B.x - A.x) * t, z = A.z + (B.z - A.z) * t, y = A.y + (B.y - A.y) * t;
+    k.box(x - 0.015, x + 0.015, y, y + h, z - 0.015, z + 0.015, M.rail);
+  }
+}
+// wall along X (axis 'x', at Z = c) or along Z (axis 'z', at X = c), with door / window / vent openings
+function wall(k, axis, c, a0, a1, y0, y1, t, m, ops = []) {
+  const put = (p0, p1, q0, q1, n0, n1, mm) => axis === 'x'
+    ? k.box(p0, p1, q0, q1, c + n0, c + n1, mm)
+    : k.box(c + n0, c + n1, q0, q1, p0, p1, mm);
+  const h = t / 2;
+  let cur = a0;
+  for (const o of [...ops].sort((p, q) => p.a - q.a)) {
+    put(cur, o.a, y0, y1, -h, h, m);
+    if (o.y0 > y0) put(o.a, o.b, y0, o.y0, -h, h, m);
+    if (o.y1 < y1) put(o.a, o.b, o.y1, y1, -h, h, m);
+    const f = 0.05, d = h * 0.8;
+    put(o.a, o.a + f, o.y0, o.y1, -d, d, M.frame);
+    put(o.b - f, o.b, o.y0, o.y1, -d, d, M.frame);
+    put(o.a, o.b, o.y1 - f, o.y1, -d, d, M.frame);
+    if (o.type === 'door') {
+      put(o.a + f, o.b - f, o.y0, o.y1 - f, -0.02, 0.02, M.door);
+    } else {
+      put(o.a, o.b, o.y0, o.y0 + f, -d, d, M.frame);
+      if (o.type === 'win') { const mid = (o.a + o.b) / 2; put(mid - 0.025, mid + 0.025, o.y0, o.y1, -d, d, M.frame); }
+      put(o.a + f, o.b - f, o.y0 + f, o.y1 - f, -0.01, 0.01, o.type === 'vent' ? M.frosted : M.glass);
+    }
+    cur = o.b;
+  }
+  put(cur, a1, y0, y1, -h, h, m);
+}
+function gableRoof(k, L0, L1, half, ov, baseY, toWorld, ends) {
+  const span = half + ov, th = Math.atan(TAN), slopeLen = span / Math.cos(th);
+  const ridgeY = baseY + half * TAN + 0.03;
+  for (const s of [1, -1]) {
+    const g = new THREE.BoxGeometry(L1 - L0, 0.05, slopeLen);
+    planarUV(g);
+    g.applyMatrix4(new THREE.Matrix4().compose(
+      new THREE.Vector3((L0 + L1) / 2, ridgeY - (span / 2) * TAN, (s * span) / 2),
+      new THREE.Quaternion().setFromEuler(new THREE.Euler(s * th, 0, 0)), ONE));
+    g.applyMatrix4(toWorld); k.add(g, M.roof);
+  }
+  const cap = new THREE.BoxGeometry(L1 - L0, 0.08, 0.36);
+  cap.translate((L0 + L1) / 2, ridgeY + 0.03, 0); cap.applyMatrix4(toWorld); k.add(cap, M.roofCap);
+  for (const xe of ends) {
+    const sh = new THREE.Shape();
+    sh.moveTo(-half, baseY); sh.lineTo(half, baseY); sh.lineTo(0, baseY + half * TAN); sh.closePath();
+    const g = new THREE.ShapeGeometry(sh);
+    g.applyMatrix4(new THREE.Matrix4().makeRotationY(-Math.PI / 2));
+    g.translate(xe, 0, 0); g.applyMatrix4(toWorld); k.add(g, M.gable);
+  }
+}
+function monoRoof(k, x0, x1, y0, y1, z0, z1) {
+  const len = Math.hypot(x1 - x0, y1 - y0), ang = Math.atan2(y1 - y0, x1 - x0);
+  const g = new THREE.BoxGeometry(len, 0.05, z1 - z0);
+  const p = g.attributes.position, uv = g.attributes.uv;
+  for (let i = 0; i < p.count; i++) uv.setXY(i, p.getZ(i), p.getX(i));
+  g.applyMatrix4(new THREE.Matrix4().compose(
+    new THREE.Vector3((x0 + x1) / 2, (y0 + y1) / 2, (z0 + z1) / 2),
+    new THREE.Quaternion().setFromEuler(new THREE.Euler(0, 0, ang)), ONE));
+  k.add(g, M.roof);
+}
+
+// ---------- scene ----------
+const stage = $('#stage');
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(40, 1, 0.3, 700);
+const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.domElement.setAttribute('tabindex', '0');
+stage.appendChild(renderer.domElement);
+const labelRenderer = new CSS2DRenderer();
+labelRenderer.domElement.className = 'labels';
+stage.appendChild(labelRenderer.domElement);
+
+const C = new THREE.Vector3(LOT_W / 2, 0, LOT_D / 2);
+scene.add(new THREE.HemisphereLight(0xeef3f8, 0xb2a68e, 1.35));
+const sun = new THREE.DirectionalLight(0xfff3e0, 2.3);
+sun.position.set(C.x - 24, 44, C.z + 26); sun.target.position.copy(C);
+sun.castShadow = true;
+Object.assign(sun.shadow.camera, { left: -36, right: 36, top: 36, bottom: -36, near: 5, far: 130 });
+const big = Math.min(window.innerWidth, window.innerHeight) > 700;
+sun.shadow.mapSize.set(big ? 4096 : 2048, big ? 4096 : 2048);
+sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.03;
+scene.add(sun, sun.target);
+
+const model = new THREE.Group(); model.name = 'RoomForRent'; scene.add(model);
+const site = new THREE.Group(); site.name = 'Site';
+const ground = new THREE.Group(); ground.name = 'GroundFloor';
+const upper = new THREE.Group(); upper.name = 'UpperFloor';
+const roof = new THREE.Group(); roof.name = 'Roof';
+const house = new THREE.Group(); house.name = 'ExistingHouse';
+model.add(site, ground, upper, roof, house);
+const labelRoot = new THREE.Group(); scene.add(labelRoot);
+const labels = [];
+function addLabel(text, cls, pos, meta = {}) {
+  const el = document.createElement('div'); el.className = 'lbl ' + cls; el.textContent = text;
+  const o = new CSS2DObject(el); o.position.copy(pos); o.userData = meta;
+  labelRoot.add(o); labels.push(o); return o;
+}
+const V = (x, y, z) => new THREE.Vector3(x, y, z);
+
+// ---------- info texts ----------
+const INFO = {
+  walk: { title: 'ทางเดินหน้าห้อง', rows: [['กว้าง', '1.5 m'], ['ชั้นล่าง', 'ทางเดินหน้าห้อง 101–109'], ['ชั้น 2', 'ระเบียงทางเดิน มีราวกันตกสูง 0.95 m']] },
+  stair: { title: 'บันไดขึ้นชั้น 2', rows: [['ขนาด', '2.5 × 4.0 m (ตามไฟล์ Excel)'], ['รูปแบบ', 'บันไดตัว U มีชานพักกลาง (สมมติ)'], ['จำนวน', '1 จุด ฝั่งผู้เช่า ตรงหัวมุมตัว T'], ['ห้องไกลสุด', '207 เดินถึงบันไดราว 21 m']] },
+  roof: { title: 'หลังคาห้องแถว', rows: [['วัสดุ', 'เมทัลชีท (สมมติ)'], ['ทรง', 'จั่ว ลาด 15° ยื่นคลุมทางเดินชั้น 2'], ['สันหลังคา', 'สูงราว 7.4 m จากพื้น']] },
+  moto: { title: 'ที่จอดมอเตอร์ไซค์', rows: [['จำนวน', 'ประมาณ 10 คัน'], ['ตำแหน่ง', 'มุมซ้ายติดทางเดิน และหน้าบันได']] },
+  tenantPark: { title: 'ที่จอดรถยนต์ผู้เช่า 6 คัน', rows: [['ขนาดช่อง', '2.5 × 5 m'], ['P1–P4', 'แถวล่าง เว้นจากกำแพง 0.5 m'], ['P5–P6', 'หน้าบันได ฝั่งผู้เช่า']] },
+  ownerPark: { title: 'ที่จอดรถบ้าน 2 คัน', rows: [['ตำแหน่ง', 'ในลานบ้าน ข้างห้อง 108–109'], ['ขนาดช่อง', 'ประมาณ 2.75 × 5 m']] },
+  noPark: { title: 'ห้ามจอด', rows: [['ใกล้ประตู', 'ทางเก็บบานประตูเลื่อนตอนเปิด'], ['หน้าบ้าน', 'เว้นทางเข้าบ้านเดิม']] },
+  drive: { title: 'ทางวิ่ง', rows: [['กว้างในผัง', 'ประมาณ 6.7 m'], ['ใช้ทำ', 'ทางรถเข้าออกช่องจอด และทางรถเจ้าของบ้านไปบ้าน']] },
+  owner: { title: 'ลานบ้าน (ครอบครัว)', rows: [['ตำแหน่ง', 'ข้างห้อง 108–109 ติดบ้านเดิม'], ['แยกโซน', 'ประตูรั้วครอบครัว 1 จุด บนทางเดินระหว่างห้อง 104 กับ 105']] },
+  yard: { title: 'ลานข้างบ้าน', rows: [['ตำแหน่ง', 'ระหว่างห้องแถวขาบนกับบ้านเดิม'], ['ระยะ', 'บ้านเดิมห่างแนวเขตด้านบน 12.27 m']] },
+  gate: { title: 'ประตูเลื่อนรีโมท', rows: [['กว้าง', 'ประมาณ 5.5 m'], ['การเปิด', 'บานเลื่อนไปทางขวา ผ่านช่วงห้ามจอดใกล้ประตู'], ['ทางเข้า', 'รถวิ่งมาชนกำแพงแล้วเลี้ยวซ้ายเข้าประตู']] },
+  forecourt: { title: 'ลานหน้าประตู', rows: [['ใช้ทำ', 'รถวิ่งเข้ามาจากทางฮ่อม แล้วเลี้ยวซ้ายเข้าประตู'], ['ด้านขวา', 'กำแพงกั้น สูง 2 m (สมมติ)']] },
+  famGate: { title: 'ประตูรั้วครอบครัว', rows: [['ตำแหน่ง', 'บนทางเดินระหว่างห้อง 104 กับ 105'], ['ใช้ทำ', 'แยกห้อง 105–107 และลานบ้านออกจากฝั่งผู้เช่า'], ['จำนวน', '1 จุด']] },
+  oldWall: { title: 'กำแพงสูง 2 ชั้น', rows: [['สถานะ', 'สร้างแล้ว'], ['ด้านใน', 'แถบ 5.5 m เป็นที่ดินของเจ้าของ (ในใบอนุญาตเขียนเป็นซอย)']] },
+  fence: { title: 'รั้วรอบที่ดิน', rows: [['ความสูงในโมเดล', '2.0 m (สมมติ)'], ['หมายเหตุ', 'ผังระบุแค่เส้นแนวเขต']] },
+  lane: { title: 'ทางฮ่อมสาธารณะ', rows: [['กว้าง', '4.3 m'], ['ทางเข้า', 'ต่อเข้าลานหน้าประตูที่มุมล่างซ้าย']] },
+  house: { title: 'บ้านเดิม (มีอยู่แล้ว)', rows: [['ขนาด', '15 × 15 m'], ['ความสูง', '2 ชั้น (ตามใบอนุญาตเดิม)'], ['ระยะ', 'ห่างแนวเขตบน 12.27 m ล่าง 2.57 m']], note: 'โมเดลอย่างง่าย ใช้บอกตำแหน่งเท่านั้น' },
+};
+function roomInfo(r) {
+  const rows = [
+    ['ชั้น', r.floor ? 'ชั้น 2' : 'ชั้นล่าง'],
+    ['ขนาด', '4.0 × 7.5 m (30 m²)'],
+    ['ห้องน้ำ', 'ในตัว ราว 1.9 × 1.9 m มุมหลังห้อง'],
+    ['ประตู', r.row === 'stem' ? 'หันออกทางเดินฝั่งผู้เช่า' : 'หันออกทางเดินหน้าห้อง'],
+    ['หน้าต่าง', 'บานเลื่อนข้างประตู (สมมติ)'],
+  ];
+  if (r.fam) rows.push(['อนาคต', 'โซนครอบครัว (ตอนเริ่มยังปล่อยเช่าได้)']);
+  return { title: 'ห้อง ' + r.no, rows, note: 'ยังไม่มีการตกแต่งภายใน รอข้อมูลเฟอร์นิเจอร์และวัสดุ' };
+}
+
+// ---------- rooms ----------
+const ROOMS = [];
+for (let i = 0; i < 7; i++) for (const f of [0, 1]) {
+  ROOMS.push({ no: (f ? 201 : 101) + i, floor: f, row: 'top', x0: 1.5 + 4 * i, left: true, right: i === 6, fam: !f && i >= 4 });
+}
+ROOMS.push({ no: 108, floor: 0, row: 'stem', z0: 10, left: true, right: false });
+ROOMS.push({ no: 109, floor: 0, row: 'stem', z0: 14, left: true, right: true });
+ROOMS.push({ no: 208, floor: 1, row: 'stem', z0: 10, left: true, right: false });
+ROOMS.push({ no: 209, floor: 1, row: 'stem', z0: 14, left: true, right: true });
+
+// Room local frame: X = across the room from the viewer's left (0–4 m), Z = −depth (front 0, back −7.5).
+// Top row faces the walkway (−z); stem rooms face the tenant side (+x) and are turned −90°.
+for (const r of ROOMS) {
+  const g = new THREE.Group(); g.name = 'Room_' + r.no;
+  if (r.row === 'top') g.position.set(r.x0, 0, 8.5);
+  else { g.position.set(9.5, 0, r.z0); g.rotation.y = -Math.PI / 2; }
+  const k = new Kit(g), h = T / 2, wc = 1.9;
+  const ffl = r.floor ? F1 : SLAB, top = ffl + FH - SLAB;
+  const floorMat = r.fam ? M.famFloor : M.roomFloor;
+  k.box(h, RW - h, ffl, ffl + 0.012, -(RD - h), -h, floorMat, true);
+  k.box(h, wc - 0.05, ffl + 0.012, ffl + 0.02, -(RD - h), -(RD - wc) - 0.05, M.wcFloor, true);
+  wall(k, 'x', 0, -h, RW + h, ffl, top, T, M.wall, [
+    { a: 0.35, b: 1.25, y0: ffl, y1: ffl + 2.1, type: 'door' },
+    { a: 2.0, b: 3.6, y0: ffl + 0.9, y1: ffl + 2.1, type: 'win' }]);
+  wall(k, 'x', -RD, -h, RW + h, ffl, top, T, M.wall, [{ a: 0.6, b: 1.3, y0: ffl + 1.7, y1: ffl + 2.3, type: 'vent' }]);
+  if (r.left) wall(k, 'z', 0, -RD + h, -h, ffl, top, T, M.wall);
+  if (r.right) wall(k, 'z', RW, -RD + h, -h, ffl, top, T, M.wall);
+  wall(k, 'z', wc, -RD + h, -(RD - wc) - 0.05, ffl, top, 0.1, M.wall);
+  wall(k, 'x', -(RD - wc), h, wc + 0.05, ffl, top, 0.1, M.wall, [{ a: 0.45, b: 1.15, y0: ffl, y1: ffl + 2.0, type: 'door' }]);
+  k.done();
+  g.userData.floorMesh = k.meshes.get(floorMat);
+  g.userData.baseFloor = floorMat;
+  g.userData.info = roomInfo(r);
+  (r.floor ? upper : ground).add(g);
+  g.updateMatrixWorld(true);
+  addLabel(String(r.no), r.fam ? 'room fam' : 'room', g.localToWorld(V(RW / 2, ffl + 1.3, -RD / 2)), { floor: r.floor });
+}
+
+// ---------- walkways, slabs, columns ----------
+const COLS_TOP = [1.55, 5.5, 8.1, 9.6, 13.3, 16.95, 21.2, 25.35, 29.45];
+const COLS_STEM = [14, STEM_END - 0.05];
+function columns(k, y0, y1) {
+  for (const x of COLS_TOP) k.box(x - 0.125, x + 0.125, y0, y1, 9.775, 10.025, M.column);
+  for (const z of COLS_STEM) k.box(7.975, 8.225, y0, y1, z - 0.125, z + 0.125, M.column);
+}
+{
+  const g = new THREE.Group(); g.name = 'Walkway_Ground'; g.userData.info = INFO.walk;
+  const k = new Kit(g);
+  k.box(1.425, 29.575, 0, SLAB, 0.925, 10.0, M.slab);
+  k.box(8.0, 17.075, 0, SLAB, 10.0, STEM_END + 0.075, M.slab);
+  k.box(1.425, 29.575, SLAB, SLAB + 0.012, 8.575, 10.0, M.walk, true);
+  k.box(8.0, 9.425, SLAB, SLAB + 0.012, 10.0, STEM_END + 0.075, M.walk, true);
+  columns(k, SLAB, FH);
+  k.done(); ground.add(g);
+}
+{
+  const g = new THREE.Group(); g.name = 'Walkway_Upper'; g.userData.info = INFO.walk;
+  const k = new Kit(g);
+  k.box(1.375, 29.575, FH, F1, 0.875, 10.0, M.slab);
+  k.box(8.0, 17.125, FH, F1, 10.0, STEM_END + 0.125, M.slab);
+  k.box(1.425, 29.575, F1, F1 + 0.012, 8.575, 10.0, M.walk, true);
+  k.box(8.0, 9.425, F1, F1 + 0.012, 10.0, STEM_END - 0.025, M.walk, true);
+  const P = (x0, x1, z0, z1) => {
+    k.box(x0, x1, F1, F1 + 0.95, z0, z1, M.parapet);
+    k.box(x0 - 0.02, x1 + 0.02, F1 + 0.95, F1 + 1.0, z0 - 0.02, z1 + 0.02, M.rail);
+  };
+  P(1.425, 8.0, 9.9, 10.0); P(17.0, 29.575, 9.9, 10.0);
+  P(1.425, 1.525, 8.575, 9.9); P(29.475, 29.575, 8.575, 9.9);
+  P(8.0, 8.1, 10.0, 12.5); P(8.0, 8.1, 14.0, STEM_END - 0.025); P(8.0, 9.425, STEM_END - 0.025, STEM_END + 0.075);
+  columns(k, F1, 2 * FH);
+  k.box(1.425, 29.575, 2 * FH - 0.25, 2 * FH, 9.775, 10.025, M.band);
+  k.box(7.975, 8.225, 2 * FH - 0.25, 2 * FH, 10.025, STEM_END + 0.075, M.band);
+  k.done(); upper.add(g);
+}
+
+// ---------- stair (U-shaped, 2.5 × 4.0 m, one stair at the corner of the T) ----------
+// Local frame: u across (0–W), v along (0–4). Flight A climbs from v=0 to the mid landing,
+// flight B returns to the top landing at v 0–1.5, which opens to the upper stem walkway on side u=0.
+function buildStair(name, ox, oz, W) {
+  const low = new THREE.Group(), up = new THREE.Group();
+  for (const g of [low, up]) { g.position.set(ox, 0, oz); g.rotation.y = Math.PI; g.userData.info = INFO.stair; }
+  low.name = name + '_Lower'; up.name = name + '_Upper';
+  const kl = new Kit(low), ku = new Kit(up);
+  const L = 4.0, MID = SLAB + 2.0, vA = 3.1, vB = 1.5, a1 = W / 2 - 0.05, b0 = W / 2 + 0.05;
+  const nA = 12, rA = (MID - SLAB) / nA, dA = vA / nA;
+  for (let i = 0; i < nA; i++) kl.box(0, a1, 0, SLAB + (i + 1) * rA, i * dA, (i + 1) * dA, M.stair);
+  kl.box(a1, b0, 0, FH, vB, vA, M.wall);
+  kl.box(0, W, MID - 0.15, MID, vA, L, M.stair);
+  kl.box(0, 0.2, 0, MID - 0.15, L - 0.2, L, M.column);
+  kl.box(W - 0.2, W, 0, MID - 0.15, L - 0.2, L, M.column);
+  kl.box(a1, a1 + 0.15, 0, FH, 0, 0.15, M.column);
+  kl.box(W - 0.15, W, 0, FH, 0, 0.15, M.column);
+  rail(kl, [0.04, SLAB, 0], [0.04, MID, vA]);
+  rail(kl, [a1 + 0.02, SLAB, 0.05], [a1 + 0.02, SLAB + vB * (MID - SLAB) / vA, vB]);
+  rail(kl, [0, MID, L - 0.04], [W, MID, L - 0.04]);
+  rail(kl, [0.04, MID, vA], [0.04, MID, L]);
+  rail(kl, [W - 0.04, MID, vA], [W - 0.04, MID, L]);
+  const nB = 6, rB = (F1 - MID) / nB, dB = (vA - vB) / nB;
+  for (let j = 0; j < nB; j++) { const t = MID + (j + 1) * rB; ku.box(b0, W, t - 0.3, t, vA - (j + 1) * dB, vA - j * dB, M.stair); }
+  ku.box(0, W, F1 - 0.15, F1, 0, vB, M.stair);
+  rail(ku, [W - 0.04, MID, vA], [W - 0.04, F1, vB]);
+  rail(ku, [0, F1, 0.04], [W, F1, 0.04]);
+  rail(ku, [0, F1, vB - 0.04], [a1, F1, vB - 0.04]);
+  rail(ku, [W - 0.04, F1, 0], [W - 0.04, F1, vB]);
+  kl.done(); ku.done();
+  ground.add(low); upper.add(up);
+}
+buildStair('Stair', 8.0, 14.0, 2.5);   // x 5.5–8.0, z 10–14; climbs north from the tenant side
+addLabel('บันได', 'note', V(6.75, F1 + 0.6, 12.0), { floor: null });
+addLabel('ห้องไกลสุด (207) เดินถึงบันได ~21 m', 'note', V(23.5, F1 + 0.3, 9.3), { floor: 1 });
+
+// ---------- roof ----------
+{
+  const g = new THREE.Group(); g.name = 'Roof_Main'; g.userData.info = INFO.roof;
+  const k = new Kit(g);
+  k.box(1.375, 29.575, 2 * FH, 2 * FH + SLAB, 0.875, 10.025, M.ceiling);
+  k.box(7.975, 17.125, 2 * FH, 2 * FH + SLAB, 10.025, STEM_END + 0.125, M.ceiling);
+  const base = 2 * FH + SLAB;
+  gableRoof(k, 0.925, 30.075, 4.5375, 0.5, base, new THREE.Matrix4().makeTranslation(0, 0, 5.4625), [1.425, 29.575]);
+  const stemTo = new THREE.Matrix4().makeTranslation(12.5375, 0, 0).multiply(new THREE.Matrix4().makeRotationY(-Math.PI / 2));
+  gableRoof(k, 5.4625, STEM_END + 0.625, 4.5375, 0.5, base, stemTo, [STEM_END + 0.125]);
+  monoRoof(k, 5.1, 8.1, 5.7, 6.0, 10.3, 14.4);
+  k.box(5.55, 5.75, 0, 5.74, 10.3, 10.5, M.column); k.box(5.55, 5.75, 0, 5.74, 13.5, 13.7, M.column);
+  k.done(); roof.add(g);
+}
+
+// ---------- site ----------
+function zone(name, info, x0, x1, z0, z1, m, y1 = 0.02, y0 = 0) {
+  const g = new THREE.Group(); g.name = name; g.userData.info = info;
+  const k = new Kit(g); k.box(x0, x1, y0, y1, z0, z1, m, true); k.done(); site.add(g); return g;
+}
+{
+  const og = new THREE.Mesh(new THREE.PlaneGeometry(420, 420), M.outside);
+  og.rotation.x = -Math.PI / 2; og.position.set(C.x, -0.03, C.z); og.receiveShadow = true; og.name = 'Surroundings';
+  site.add(og);
+  const g = new THREE.Group(); g.name = 'Lot'; const k = new Kit(g);
+  k.box(0, LOT_W, -0.03, 0.0, 0, LOT_D, M.lotBase);
+  for (let z = 13.1; z < GATE_Z - 0.3; z += 1.0) k.box(5.45, 5.55, 0.02, 0.03, z, z + 0.55, M.line55);
+  k.done(); site.add(g);
+}
+zone('MotoParking', INFO.moto, 0, 8.0, 10.0, 13.0, M.tenant);
+zone('MotoParking_Stair', INFO.moto, 5.5, 8.0, 13.0, STEM_END, M.tenant);
+zone('TenantParking_P5P6', INFO.tenantPark, 0, 5.5, 13.0, STEM_END, M.drive);
+zone('OwnerYard', INFO.owner, 17.075, 24.0, 10.0, STEM_END, M.owner);
+zone('DriveAisle', INFO.drive, 0, 24.0, STEM_END, GATE_Z, M.drive);
+zone('ParkingRow', INFO.tenantPark, 6.4, 24.0, GATE_Z, LOT_D, M.drive);
+zone('Forecourt', INFO.forecourt, 0, 6.0, GATE_Z, LOT_D, M.forecourt);
+zone('SideYard', INFO.yard, 24.0, LOT_W, 0, 12.27, M.grass);
+zone('HouseGround', INFO.yard, 24.0, LOT_W, 12.27, LOT_D, M.grass, 0.015);
+zone('Lane', INFO.lane, -16, 0, 25.54, LOT_D, M.lane, -0.005, -0.025);
+// parking bay paint
+{
+  const Y0 = 0.02, Y1 = 0.034, LW = 0.1;
+  const g = new THREE.Group(); g.name = 'TenantParking_Bays'; g.userData.info = INFO.tenantPark; const k = new Kit(g);
+  for (const x of [11.4, 13.9, 16.4, 18.9, 21.4]) k.box(x - LW / 2, x + LW / 2, Y0, Y1, 24.34, 29.34, M.bayLine);
+  k.box(11.35, 21.45, Y0, Y1, 29.29, 29.39, M.bayLine);
+  for (const x of [0.5, 3.0, 5.5]) k.box(x - LW / 2, x + LW / 2, Y0, Y1, 13.0, STEM_END, M.bayLine);
+  k.box(0.45, 5.55, Y0, Y1, 12.95, 13.05, M.bayLine);
+  k.done(); site.add(g);
+  const o = new THREE.Group(); o.name = 'OwnerParking_Bays'; o.userData.info = INFO.ownerPark; const ko = new Kit(o);
+  ko.box(18.0, 23.5, 0.02, 0.025, 13.0, STEM_END, M.drive, true);
+  for (const x of [18.0, 20.75, 23.5]) ko.box(x - LW / 2, x + LW / 2, 0.025, Y1, 13.0, STEM_END, M.bayOwner);
+  ko.box(17.95, 23.55, 0.025, Y1, 12.95, 13.05, M.bayOwner);
+  ko.done(); site.add(o);
+  const n = new THREE.Group(); n.name = 'NoParking'; n.userData.info = INFO.noPark; const kn = new Kit(n);
+  kn.box(6.6, 11.35, Y0, 0.03, 24.34, 29.34, M.noPark, true);
+  kn.box(21.45, 24.0, Y0, 0.03, 24.34, 29.34, M.noPark, true);
+  kn.done(); site.add(n);
+}
+{
+  const g = new THREE.Group(); g.name = 'Fence'; g.userData.info = INFO.fence; const k = new Kit(g);
+  const F = (x0, x1, z0, z1) => { k.box(x0, x1, 0, 1.95, z0, z1, M.fence); k.box(x0 - 0.03, x1 + 0.03, 1.95, 2.05, z0 - 0.03, z1 + 0.03, M.fenceCap); };
+  F(-0.25, LOT_W + 0.2, -0.2, 0); F(LOT_W, LOT_W + 0.2, 0, LOT_D + 0.2); F(0, LOT_W, LOT_D, LOT_D + 0.2);
+  k.done(); site.add(g);
+}
+{
+  const g = new THREE.Group(); g.name = 'ExistingWall'; g.userData.info = INFO.oldWall; const k = new Kit(g);
+  k.box(-0.25, 0, 0, 6.0, -0.2, GATE_Z, M.oldWall); k.done(); site.add(g);
+}
+{
+  const g = new THREE.Group(); g.name = 'ForecourtWall'; g.userData.info = INFO.forecourt; const k = new Kit(g);
+  k.box(6.0, 6.4, 0, 1.95, GATE_Z + 0.15, LOT_D, M.fence); k.box(5.97, 6.43, 1.95, 2.05, GATE_Z + 0.15, LOT_D, M.fenceCap);
+  k.done(); site.add(g);
+}
+{
+  const g = new THREE.Group(); g.name = 'Gate'; g.userData.info = INFO.gate; const k = new Kit(g);
+  k.box(-0.05, 0.3, 0, 2.25, GATE_Z - 0.2, GATE_Z + 0.15, M.fenceCap);
+  k.box(5.9, 6.45, 0, 2.25, GATE_Z - 0.25, GATE_Z + 0.15, M.fenceCap);
+  const z0 = GATE_Z - 0.1, z1 = GATE_Z - 0.02;
+  k.box(0.35, 5.85, 0.08, 0.16, z0, z1, M.gate); k.box(0.35, 5.85, 1.78, 1.86, z0, z1, M.gate);
+  for (let x = 0.42; x < 5.8; x += 0.13) k.box(x, x + 0.03, 0.16, 1.78, z0 + 0.01, z1 - 0.01, M.gate);
+  k.box(0.3, 11.8, 0.02, 0.05, z0, z1, M.gate);   // track the leaf slides along when opening
+  k.done(); site.add(g);
+}
+{
+  const g = new THREE.Group(); g.name = 'FamilyGate'; g.userData.info = INFO.famGate; const k = new Kit(g);
+  const y0 = SLAB + 0.012;
+  k.box(17.45, 17.6, 0, y0 + 1.8, 9.85, 10.1, M.famGate);
+  k.box(17.46, 17.54, y0 + 0.06, y0 + 0.14, 8.6, 9.85, M.famGate); k.box(17.46, 17.54, y0 + 1.66, y0 + 1.74, 8.6, 9.85, M.famGate);
+  for (let z = 8.64; z < 9.82; z += 0.13) k.box(17.48, 17.52, y0 + 0.14, y0 + 1.66, z, z + 0.03, M.famGate);
+  k.box(17.075, 17.45, 0, 1.85, 10.0, 10.1, M.fence);
+  k.done(); ground.add(g);
+}
+// trees, vehicles, people for scale
+{
+  const g = new THREE.Group(); g.name = 'Props'; const k = new Kit(g);
+  const tree = (x, z, r = 1.6) => {
+    const t = new THREE.CylinderGeometry(0.14, 0.18, 2.4, 8); t.translate(x, 1.2, z); k.add(t, M.trunk);
+    const c = new THREE.IcosahedronGeometry(r, 1); c.translate(x, 2.4 + r * 0.7, z); k.add(c, M.leaf);
+  };
+  tree(22.4, 11.3, 1.1); tree(35.0, 4.8, 1.9); tree(37.6, 9.4, 1.4);
+  const wheel = (x, y, z, r, w, axis) => {
+    const c = new THREE.CylinderGeometry(r, r, w, 14);
+    if (axis === 'x') c.rotateZ(Math.PI / 2); else c.rotateX(Math.PI / 2);
+    c.translate(x, y, z); k.add(c, M.tyre);
+  };
+  const car = (cx, cz, m) => {   // parked nose along z
+    k.box(cx - 0.9, cx + 0.9, 0.32, 0.95, cz - 2.2, cz + 2.2, m);
+    k.box(cx - 0.82, cx + 0.82, 0.95, 1.42, cz - 1.05, cz + 1.0, M.carGlass);
+    for (const dx of [-0.8, 0.8]) for (const dz of [-1.4, 1.4]) wheel(cx + dx, 0.33, cz + dz, 0.33, 0.22, 'x');
+  };
+  car(12.65, 26.84, M.carBlue); car(17.65, 26.84, M.carWhite); car(20.15, 26.84, M.carGrey);
+  car(4.25, 15.5, M.carSilver); car(19.375, 15.5, M.carRed);
+  // motorbikes: a row along the wall strip, and four in front of the stair
+  for (let i = 0; i < 6; i++) {
+    const x = 0.95 + i * 0.8, bm = i % 2 ? M.bike2 : M.bike;
+    k.box(x - 0.12, x + 0.12, 0.35, 0.8, 10.7, 12.5, bm); k.box(x - 0.14, x + 0.14, 0.8, 0.92, 11.2, 11.9, M.tyre);
+    wheel(x, 0.3, 10.95, 0.3, 0.1, 'x'); wheel(x, 0.3, 12.25, 0.3, 0.1, 'x');
+  }
+  for (let i = 0; i < 4; i++) {
+    const z = 14.6 + i * 0.85, bm = i % 2 ? M.bike : M.bike2;
+    k.box(5.75, 7.55, 0.35, 0.8, z - 0.12, z + 0.12, bm); k.box(6.25, 6.95, 0.8, 0.92, z - 0.14, z + 0.14, M.tyre);
+    wheel(6.0, 0.3, z, 0.3, 0.1, 'z'); wheel(7.3, 0.3, z, 0.3, 0.1, 'z');
+  }
+  const person = (x, y, z) => {
+    const b = new THREE.CapsuleGeometry(0.2, 1.0, 4, 10); b.translate(x, y + 0.7, z); k.add(b, M.person);
+    const h = new THREE.SphereGeometry(0.13, 12, 10); h.translate(x, y + 1.58, z); k.add(h, M.skin);
+  };
+  person(3.4, 0.02, 21.0); person(8.75, SLAB + 0.012, 16.6);
+  k.done(); site.add(g);
+  const pg = new THREE.Group(); pg.name = 'Person_Upper'; const pk = new Kit(pg);
+  const b = new THREE.CapsuleGeometry(0.2, 1.0, 4, 10); b.translate(12.0, F1 + 0.7, 9.3); pk.add(b, M.person);
+  const h = new THREE.SphereGeometry(0.13, 12, 10); h.translate(12.0, F1 + 1.58, 9.3); pk.add(h, M.skin);
+  pk.done(); upper.add(pg);
+}
+
+// ---------- existing house (simple massing) ----------
+{
+  const g = house; g.userData.info = INFO.house; const k = new Kit(g);
+  const x0 = 24, x1 = 39, z0 = 12.27, z1 = 27.27, cx = (x0 + x1) / 2, cz = (z0 + z1) / 2;
+  k.box(x0 - 0.2, x1 + 0.2, 0, 0.4, z0 - 0.2, z1 + 0.2, M.houseBase);
+  k.box(x0, x1, 0.4, 3.5, z0, z1, M.houseWall);
+  k.box(x0 - 0.12, x1 + 0.12, 3.5, 3.75, z0 - 0.12, z1 + 0.12, M.houseTrim);
+  k.box(x0, x1, 3.75, 6.8, z0, z1, M.houseWall);
+  k.box(x0 - 0.9, x1 + 0.9, 6.8, 7.0, z0 - 0.9, z1 + 0.9, M.houseTrim);
+  const rf = new THREE.ConeGeometry((15 + 1.8) / Math.SQRT2, 3.4, 4, 1);
+  rf.rotateY(Math.PI / 4); rf.translate(cx, 7.0 + 1.7, cz); k.add(rf, M.houseRoof);
+  // windows: face W/E at x, N/S at z; a = position along the face
+  const win = (face, a, y0, w = 1.8, hgt = 1.5) => {
+    const p = 0.03, q = 0.06;
+    if (face === 'W' || face === 'E') {
+      const x = face === 'W' ? x0 : x1, s = face === 'W' ? -1 : 1;
+      k.box(x, x + s * p, y0 - 0.08, y0 + hgt + 0.08, a - w / 2 - 0.08, a + w / 2 + 0.08, M.houseTrim);
+      k.box(x, x + s * q, y0, y0 + hgt, a - w / 2, a + w / 2, M.houseGlass);
+    } else {
+      const z = face === 'N' ? z0 : z1, s = face === 'N' ? -1 : 1;
+      k.box(a - w / 2 - 0.08, a + w / 2 + 0.08, y0 - 0.08, y0 + hgt + 0.08, z, z + s * p, M.houseTrim);
+      k.box(a - w / 2, a + w / 2, y0, y0 + hgt, z, z + s * q, M.houseGlass);
+    }
+  };
+  for (const a of [z0 + 3, z1 - 3]) win('W', a, 1.3);
+  for (const a of [z0 + 3, cz, z1 - 3]) { win('W', a, 4.6); win('E', a, 1.3); win('E', a, 4.6); }
+  for (const a of [x0 + 3, cx, x1 - 3]) { win('N', a, 1.3); win('N', a, 4.6); win('S', a, 1.3); win('S', a, 4.6); }
+  // front door and porch toward the owner's yard
+  k.box(x0 - 0.06, x0, 0.4, 2.8, cz - 0.8, cz + 0.8, M.door);
+  k.box(x0 - 0.04, x0, 2.8, 2.9, cz - 0.9, cz + 0.9, M.houseTrim);
+  k.box(22.5, x0, 0, 0.4, cz - 1.5, cz + 1.5, M.houseBase);
+  k.box(22.4, x0, 3.05, 3.25, cz - 1.6, cz + 1.6, M.houseTrim);
+  for (const dz of [-1.35, 1.35]) k.box(22.55, 22.8, 0.4, 3.05, cz + dz - 0.125, cz + dz + 0.125, M.houseTrim);
+  k.done();
+}
+
+// ---------- zone labels ----------
+const ZL = (t, cls, p, meta = {}) => addLabel(t, cls, p, { floor: null, ...meta });
+ZL('มอเตอร์ไซค์ ~10 คัน', 'zone', V(2.9, 0.3, 11.6));
+ZL('ลานบ้าน (ครอบครัว)', 'zone', V(20.2, 0.3, 11.4));
+ZL('รถบ้าน 2 คัน', 'zone', V(20.75, 0.3, 17.5));
+ZL('ทางวิ่ง ~6.7 m', 'zone', V(12.5, 0.3, 21.2));
+ZL('ประตูเลื่อนรีโมท ~5.5 m', 'zone', V(3.1, 2.5, GATE_Z));
+ZL('ประตูรั้วครอบครัว', 'note', V(17.5, 2.3, 9.25));
+ZL('ลานหน้าประตู', 'note', V(3.0, 0.3, 27.6));
+ZL('ห้ามจอด', 'note', V(9.0, 0.3, 27.0));
+ZL('ห้ามจอด', 'note', V(22.7, 0.3, 27.0));
+ZL('ทางฮ่อมสาธารณะ 4.3 m', 'note', V(-9, 0.3, 27.7));
+ZL('กำแพงสูง 2 ชั้น (มีอยู่แล้ว)', 'note', V(-0.2, 6.4, 13.0));
+ZL('แนว 5.5 m', 'note', V(5.5, 0.3, 22.6));
+ZL('บ้านเดิม 15 × 15 m', 'zone', V(31.5, 10.9, 19.77), { house: true });
+[['P1', 12.65], ['P2', 15.15], ['P3', 17.65], ['P4', 20.15]].forEach(([t, x]) => ZL(t, 'note', V(x, 0.3, 24.8)));
+[['P5', 1.75], ['P6', 4.25]].forEach(([t, x]) => ZL(t, 'note', V(x, 0.3, 17.6)));
+
+// ---------- camera, controls ----------
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true; controls.dampingFactor = 0.08; controls.screenSpacePanning = true;
+controls.maxPolarAngle = Math.PI / 2 - 0.02; controls.minDistance = 1.5; controls.maxDistance = 170;
+
+const VIEWS = {
+  oblique: () => {
+    const tgt = V(17.5, 1.5, 15.5), off = V(-31, 30, 37);
+    return { pos: tgt.clone().add(off.multiplyScalar(THREE.MathUtils.clamp(1.3 / camera.aspect, 1, 2.9))), tgt, fov: 40 };
+  },
+  top: () => {
+    const tan = Math.tan(THREE.MathUtils.degToRad(40) / 2);
+    const d = Math.max((LOT_D / 2 + 3) / tan, (LOT_W / 2 + 3) / (tan * camera.aspect));
+    return { pos: V(C.x, d, C.z + 0.01), tgt: C.clone(), fov: 40 };
+  },
+  gate: () => ({ pos: V(2.6, 1.65, 24.0), tgt: V(17.5, 3.0, 12.0), fov: 62 }),
+  walk: () => ({ pos: V(2.3, F1 + 1.6, 9.25), tgt: V(28, F1 + 1.3, 9.25), fov: 60 }),
+};
+let tween = null;
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+function setPressedView(name) {
+  document.querySelectorAll('#views button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.view === name)));
+}
+function goView(name, instant) {
+  if (name === 'walk' && !state.upper) { state.upper = true; applyState(); }
+  const v = VIEWS[name]();
+  setPressedView(name);
+  if (instant || reduceMotion.matches) {
+    camera.position.copy(v.pos); controls.target.copy(v.tgt); camera.fov = v.fov; camera.updateProjectionMatrix();
+    controls.update(); tween = null; return;
+  }
+  tween = { p0: camera.position.clone(), t0: controls.target.clone(), f0: camera.fov, p1: v.pos, t1: v.tgt, f1: v.fov, start: performance.now(), dur: 900 };
+}
+controls.addEventListener('start', () => { tween = null; setPressedView(null); });
+
+// ---------- state ----------
+const state = { roof: true, upper: true, house: true, labels: true };
+function visibleChain(o) { for (; o; o = o.parent) if (!o.visible) return false; return true; }
+function updateLabels() {
+  for (const l of labels) {
+    let v = state.labels;
+    if (l.userData.floor === 0) v = v && !state.upper;
+    if (l.userData.floor === 1) v = v && state.upper;
+    if (l.userData.house) v = v && state.house;
+    l.visible = v;
+  }
+}
+function applyState() {
+  upper.visible = state.upper;
+  roof.visible = state.roof && state.upper;
+  house.visible = state.house;
+  document.querySelectorAll('.tog').forEach((b) => b.setAttribute('aria-pressed', String(state[b.dataset.key])));
+  $('#t-roof').disabled = !state.upper;
+  updateLabels();
+  if (selected && !visibleChain(selected)) select(null);
+}
+
+// ---------- selection & info card ----------
+const selBox = new THREE.Box3Helper(new THREE.Box3(), new THREE.Color(0xb9531a));
+selBox.visible = false; scene.add(selBox);
+let selected = null;
+function select(o) {
+  if (selected && selected.userData.floorMesh) selected.userData.floorMesh.material = selected.userData.baseFloor;
+  selected = o;
+  const card = $('#info');
+  if (!o) { selBox.visible = false; card.hidden = true; return; }
+  selBox.box.setFromObject(o); selBox.visible = true;
+  if (o.userData.floorMesh) o.userData.floorMesh.material = M.roomFloorSel;
+  const info = o.userData.info;
+  $('#infoTitle').textContent = info.title;
+  const dl = $('#infoRows'); dl.replaceChildren();
+  for (const [k, v] of info.rows) {
+    const dt = document.createElement('dt'); dt.textContent = k;
+    const dd = document.createElement('dd'); dd.textContent = v;
+    dl.append(dt, dd);
+  }
+  const note = $('#infoNote'); note.hidden = !info.note; note.textContent = info.note || '';
+  card.hidden = false;
+}
+const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
+let down = null;
+renderer.domElement.addEventListener('pointerdown', (e) => { down = [e.clientX, e.clientY]; });
+renderer.domElement.addEventListener('pointerup', (e) => {
+  if (!down) return;
+  const moved = Math.hypot(e.clientX - down[0], e.clientY - down[1]); down = null;
+  if (moved > 6) return;
+  const r = renderer.domElement.getBoundingClientRect();
+  ndc.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+  ray.setFromCamera(ndc, camera);
+  for (const h of ray.intersectObject(model, true)) {
+    if (!visibleChain(h.object)) continue;
+    let o = h.object; while (o && !o.userData.info) o = o.parent;
+    select(o || null); return;
+  }
+  select(null);
+});
+$('#infoClose').addEventListener('click', () => select(null));
+window.addEventListener('keydown', (e) => { if (e.key === 'Escape') select(null); });
+
+// ---------- UI wiring ----------
+document.querySelectorAll('#views button').forEach((b) => b.addEventListener('click', () => goView(b.dataset.view)));
+document.querySelectorAll('.tog').forEach((b) => b.addEventListener('click', () => { state[b.dataset.key] = !state[b.dataset.key]; applyState(); }));
+if (window.innerWidth < 1100 || window.innerHeight < 720) $('#more').open = false;
+
+// ---------- theme ----------
+function applyTheme() {
+  const c = new THREE.Color(readTok('--scene') || '#dedcd5');
+  scene.background = c; scene.fog = new THREE.Fog(c, 150, 340);
+  selBox.material.color.set(readTok('--accent') || '#b9531a');
+}
+window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyTheme);
+new MutationObserver(applyTheme).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+applyTheme();
+
+// ---------- saving (PNG / GLB in a zip) through the viewer's downloads capability ----------
+let downloads = null;
+(async () => {
+  try { if (window.claude && window.claude.use) downloads = await window.claude.use('downloads'); } catch (e) { downloads = null; }
+  if (downloads) $('#export').hidden = false;
+})();
+const msg = (t) => { $('#saveMsg').textContent = t; };
+async function offer(filename, data) {
+  try { await downloads.save({ filename, data }); msg('บันทึก ' + filename + ' แล้ว'); }
+  catch (e) {
+    const code = e && e.code;
+    if (code === 'declined') msg('ยกเลิกการบันทึก');
+    else if (code === 'rate_limited') msg('มีหน้าต่างบันทึกเปิดอยู่ ลองใหม่อีกครั้งในอีกสักครู่');
+    else msg('บันทึกไฟล์ในหน้านี้ไม่ได้');
+  }
+}
+$('#savePng').addEventListener('click', async () => {
+  msg('กำลังเตรียมภาพ…');
+  renderer.render(scene, camera);
+  const blob = await new Promise((res) => renderer.domElement.toBlob(res, 'image/png'));
+  if (blob) await offer('room-for-rent-3d-v7.png', blob); else msg('สร้างภาพไม่สำเร็จ');
+});
+$('#saveGlb').addEventListener('click', async () => {
+  msg('กำลังเตรียมไฟล์ 3D…');
+  try {
+    select(null);
+    const [{ GLTFExporter }, { zipSync }] = await Promise.all([import('three/addons/exporters/GLTFExporter.js'), import('fflate')]);
+    const glb = await new GLTFExporter().parseAsync(model, { binary: true, onlyVisible: false });
+    const zip = zipSync({ 'room-for-rent-3d-v7.glb': new Uint8Array(glb) }, { level: 6 });
+    await offer('room-for-rent-3d-v7-glb.zip', new Blob([zip], { type: 'application/zip' }));
+  } catch (e) { msg('สร้างไฟล์ 3D ไม่สำเร็จ'); }
+});
+
+// ---------- loop ----------
+function resize() {
+  const w = stage.clientWidth || 1, h = stage.clientHeight || 1;
+  renderer.setSize(w, h, false); labelRenderer.setSize(w, h);
+  camera.aspect = w / h; camera.updateProjectionMatrix();
+}
+new ResizeObserver(resize).observe(stage);
+resize();
+applyState();
+goView('oblique', true);
+let first = true;
+renderer.setAnimationLoop((now) => {
+  if (tween) {
+    const k = Math.min(1, (now - tween.start) / tween.dur);
+    const e = k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
+    camera.position.lerpVectors(tween.p0, tween.p1, e);
+    controls.target.lerpVectors(tween.t0, tween.t1, e);
+    camera.fov = tween.f0 + (tween.f1 - tween.f0) * e; camera.updateProjectionMatrix();
+    if (k >= 1) tween = null;
+  }
+  controls.update();
+  renderer.render(scene, camera);
+  labelRenderer.render(scene, camera);
+  if (first) { first = false; $('#loading').hidden = true; window.__modelReady = true; }
+});
+</script>
+</body></html>
